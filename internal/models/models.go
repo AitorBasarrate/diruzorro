@@ -68,3 +68,10 @@ type SavingsGoal struct {
 }
 
 // Implement each models interface.
+type UserRepository interface {
+	Create(user *User) error
+	GetByID(id int) (*User, error)
+	GetByEmail(emain string) (*User, error)
+	Update(user *User) error
+	Delete(id int) error
+}
