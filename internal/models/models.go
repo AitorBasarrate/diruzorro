@@ -18,7 +18,6 @@ type User struct {
 type Account struct {
 	ID          int       `json:"id"`
 	UserID      int       `json:"user_id"`
-	Name        string    `json:"name"`
 	Type        string    `json:"type"`
 	Balance     float64   `json:"balance"`
 	Currency    string    `json:"currency"`
@@ -67,11 +66,39 @@ type SavingsGoal struct {
 	UpdatedAt     time.Time `json:"updated_at"`
 }
 
-// Implement each models interface.
 type UserRepository interface {
 	Create(user *User) error
 	GetByID(id int) (*User, error)
 	GetByEmail(emain string) (*User, error)
 	Update(user *User) error
+	Delete(id int) error
+}
+
+type AccountRepository interface {
+	Create(account *Account) error
+	GetByID(id int) (*User, error)
+	Update(account *Account) error
+	Delete(id int) error
+}
+
+type CategoryRepository interface {
+	Create(category *Category) error
+	GetByID(id int) (*User, error)
+	Update(category *Category) error
+	Delete(id int) error
+}
+
+type TransactionRepository interface {
+	Create(transaction *Transaction) error
+	GetByID(id int) (*Transaction, error)
+	Update(transaction *Transaction) error
+	Delete(id int) error
+}
+
+type SavingsGoalRepository interface {
+	Create(savingsGoal *SavingsGoal) error
+	GetByID(id int) (*SavingsGoal, error)
+	Update(savingsGoal *SavingsGoal) error
+	UpdateProgress(id int, amount float64) error
 	Delete(id int) error
 }
