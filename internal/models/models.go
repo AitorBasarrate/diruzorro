@@ -1,7 +1,6 @@
 package database
 
 import (
-	"database/sql"
 	"time"
 )
 
@@ -18,9 +17,7 @@ type User struct {
 type Account struct {
 	ID          int       `json:"id"`
 	UserID      int       `json:"user_id"`
-	Type        string    `json:"type"`
 	Balance     float64   `json:"balance"`
-	Currency    string    `json:"currency"`
 	Description string    `json:"description"`
 	IsActive    bool      `json:"is_active"`
 	CreatedAt   time.Time `json:"created_at"`
@@ -47,7 +44,6 @@ type Transaction struct {
 	CategoryID  int       `json:"category_id"`
 	Amount      float64   `json:"amount"` // positive for income, negative for expense
 	Description string    `json:"description"`
-	Notes       string    `json:"notes"`
 	Date        time.Time `json:"date"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
