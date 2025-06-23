@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Ahorros</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.10/htmx.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .htmx-indicator {
+      opacity: 0;
+      transition: opacity 200ms ease-in;
+    }
+
+    .htmx-request .htmx-indicator {
+      opacity: 1;
+    }
+
+    .htmx-request.htmx-indicator {
+      opacity: 1;
+    }
+  </style>
+</head>
+<!-- Main Dashboard -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="dashboard-content"></main>
+<script>
+  document.body.addEventListener('htmx:configRequest', function (evt) {
+    evt.detail.headers['X-Requested-With'] = 'XMLHttpRequest';
+  });
+
+  document.getElementById('modal').addEventListener('click', function (e) {
+    if (e.target === this) {
+      this.classList.add('hidden');
+    }
+  });
+
+  setInterval(function () {
+    htmx.trigger('#balance-card', 'refresh');
+  }, 300000);
+</script>
+
+</html>
