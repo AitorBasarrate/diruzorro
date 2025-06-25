@@ -1,14 +1,14 @@
 run:
-		docker compose up --build
+	docker compose up --build
 
 stop:
-		docker compose down
+	docker compose down
 
 clean:
-		docker compose down -v
+	docker compose down -v
 
 logs:
-		docker compose logs -f
+	docker compose logs -f
 
 build:
-		docker compose build
+	docker compose build

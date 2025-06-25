@@ -5,7 +5,7 @@ services:
       - "8080:8080"
     volumes:
       - .:/app
-      - sqlite_data:/root
+      - sqlite_data:/data
     environment:
       - ENV=dev
     restart: unless-stopped
