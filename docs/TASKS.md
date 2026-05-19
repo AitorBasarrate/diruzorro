@@ -26,7 +26,7 @@ Lista detallada de tareas para completar el proyecto. Marca cada tarea con ✅ c
 - [x] Probar auth: `curl -H "X-API-Key: dev-key-change-me" http://localhost:8080/api/v1/accounts` → `[]`
 
 ### 1.4 Docker
-- [ ] Copiar `deployments/.env.example` a `deployments/.env`
+- [x] Copiar `deployments/.env.example` a `deployments/.env`
 - [ ] Rellenar `API_KEY` con un valor aleatorio
 - [ ] Ejecutar `task docker:up`
 - [ ] Verificar: `curl http://localhost:8080/health`
