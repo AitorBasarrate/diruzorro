@@ -1,0 +1,19 @@
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - DATABASE_PATH=/data/diruzorro.db
+      - API_KEY=${API_KEY}
+      - GOCARDLESS_SECRET_ID=${GOCARDLESS_SECRET_ID}
+      - GOCARDLESS_SECRET_KEY=${GOCARDLESS_SECRET_KEY}
+    volumes:
+      - diruzorro-data:/data
+    restart: unless-stopped
+
+volumes:
+  diruzorro-data:

@@ -1,0 +1,448 @@
+openapi: 3.0.3
+info:
+  title: Diruzorro API
+  description: API de finanzas personales
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Desarrollo local
+
+security:
+  - apiKey: []
+
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    Account:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        type: { type: string, enum: [checking, savings, credit] }
+        currency: { type: string }
+        balance: { type: number }
+        bank_id: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    CreateAccount:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        type: { type: string, enum: [checking, savings, credit], default: checking }
+        currency: { type: string, default: EUR }
+        balance: { type: number, default: 0 }
+
+    Category:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        type: { type: string, enum: [expense, income] }
+        icon: { type: string }
+        color: { type: string }
+        budget_limit: { type: number }
+
+    CreateCategory:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        type: { type: string, enum: [expense, income], default: expense }
+        icon: { type: string }
+        color: { type: string }
+        budget_limit: { type: number, default: 0 }
+
+    Transaction:
+      type: object
+      properties:
+        id: { type: integer }
+        account_id: { type: integer }
+        category_id: { type: integer, nullable: true }
+        amount: { type: number }
+        type: { type: string, enum: [expense, income, transfer] }
+        description: { type: string }
+        date: { type: string, format: date }
+        bank_transaction_id: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    CreateTransaction:
+      type: object
+      required: [account_id, amount]
+      properties:
+        account_id: { type: integer }
+        category_id: { type: integer, nullable: true }
+        amount: { type: number }
+        type: { type: string, enum: [expense, income, transfer], default: expense }
+        description: { type: string }
+        date: { type: string, format: date }
+
+    Budget:
+      type: object
+      properties:
+        id: { type: integer }
+        category_id: { type: integer }
+        month: { type: integer }
+        year: { type: integer }
+        limit_amount: { type: number }
+        spent_amount: { type: number }
+
+    CreateBudget:
+      type: object
+      required: [category_id, month, year, limit_amount]
+      properties:
+        category_id: { type: integer }
+        month: { type: integer }
+        year: { type: integer }
+        limit_amount: { type: number }
+
+    SavingsGoal:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        target_amount: { type: number }
+        current_amount: { type: number }
+        target_date: { type: string, format: date, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    CreateSavingsGoal:
+      type: object
+      required: [name, target_amount]
+      properties:
+        name: { type: string }
+        target_amount: { type: number }
+        target_date: { type: string, format: date, nullable: true }
+
+    ExpenseByCategoryReport:
+      type: object
+      properties:
+        category_id: { type: integer }
+        category_name: { type: string }
+        total: { type: number }
+        color: { type: string }
+
+    MonthlyBalanceReport:
+      type: object
+      properties:
+        month: { type: integer }
+        year: { type: integer }
+        income: { type: number }
+        expenses: { type: number }
+        balance: { type: number }
+
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+
+paths:
+  /accounts:
+    get:
+      summary: Listar cuentas
+      responses:
+        '200':
+          description: Lista de cuentas
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Account' }
+    post:
+      summary: Crear cuenta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAccount' }
+      responses:
+        '201':
+          description: Cuenta creada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+
+  /accounts/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+    put:
+      summary: Actualizar cuenta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAccount' }
+      responses:
+        '200':
+          description: Cuenta actualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+    delete:
+      summary: Eliminar cuenta
+      responses:
+        '204': { description: Eliminada }
+
+  /categories:
+    get:
+      summary: Listar categorías
+      responses:
+        '200':
+          description: Lista de categorías
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Category' }
+    post:
+      summary: Crear categoría
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateCategory' }
+      responses:
+        '201':
+          description: Categoría creada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Category' }
+
+  /categories/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+    put:
+      summary: Actualizar categoría
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateCategory' }
+      responses:
+        '200':
+          description: Categoría actualizada
+    delete:
+      summary: Eliminar categoría
+      responses:
+        '204': { description: Eliminada }
+
+  /transactions:
+    get:
+      summary: Listar transacciones
+      parameters:
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+        - name: category_id
+          in: query
+          schema: { type: integer }
+        - name: account_id
+          in: query
+          schema: { type: integer }
+        - name: type
+          in: query
+          schema: { type: string, enum: [expense, income, transfer] }
+      responses:
+        '200':
+          description: Lista de transacciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Transaction' }
+    post:
+      summary: Crear transacción
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateTransaction' }
+      responses:
+        '201':
+          description: Transacción creada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transaction' }
+
+  /transactions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+    put:
+      summary: Actualizar transacción
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateTransaction' }
+      responses:
+        '200':
+          description: Transacción actualizada
+    delete:
+      summary: Eliminar transacción
+      responses:
+        '204': { description: Eliminada }
+
+  /budgets:
+    get:
+      summary: Listar presupuestos
+      parameters:
+        - name: month
+          in: query
+          schema: { type: integer }
+        - name: year
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Lista de presupuestos
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Budget' }
+    post:
+      summary: Crear presupuesto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateBudget' }
+      responses:
+        '201':
+          description: Presupuesto creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Budget' }
+
+  /budgets/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+    put:
+      summary: Actualizar presupuesto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateBudget' }
+      responses:
+        '200':
+          description: Presupuesto actualizado
+
+  /savings-goals:
+    get:
+      summary: Listar objetivos de ahorro
+      responses:
+        '200':
+          description: Lista de objetivos
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SavingsGoal' }
+    post:
+      summary: Crear objetivo de ahorro
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateSavingsGoal' }
+      responses:
+        '201':
+          description: Objetivo creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SavingsGoal' }
+
+  /savings-goals/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+    put:
+      summary: Actualizar objetivo de ahorro
+      responses:
+        '200':
+          description: Objetivo actualizado
+    delete:
+      summary: Eliminar objetivo de ahorro
+      responses:
+        '204': { description: Eliminado }
+
+  /reports/expenses-by-category:
+    get:
+      summary: Gastos agrupados por categoría
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Informe
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ExpenseByCategoryReport' }
+
+  /reports/monthly-balance:
+    get:
+      summary: Balance mensual por año
+      parameters:
+        - name: year
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Informe
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MonthlyBalanceReport' }
+
+  /reports/trends:
+    get:
+      summary: Tendencia de gastos
+      parameters:
+        - name: months
+          in: query
+          schema: { type: integer, default: 6 }
+      responses:
+        '200':
+          description: Informe
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    month: { type: string }
+                    total: { type: number }

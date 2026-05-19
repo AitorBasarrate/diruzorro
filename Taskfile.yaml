@@ -1,0 +1,107 @@
+version: '3'
+
+vars:
+  BACKEND_DIR: ./backend
+  MOBILE_DIR: ./mobile
+
+tasks:
+  # --- Backend ---
+  backend:run:
+    desc: Ejecutar el backend en modo desarrollo
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - go run ./cmd/server
+    env:
+      PORT: 8080
+      DATABASE_PATH: ./diruzorro.db
+      API_KEY: dev-key-change-me
+
+  backend:build:
+    desc: Compilar el backend
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - go build -o bin/server ./cmd/server
+
+  backend:test:
+    desc: Ejecutar tests del backend
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - go test ./...
+
+  backend:lint:
+    desc: Lint del backend con golangci-lint
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - golangci-lint run ./...
+
+  # --- Mobile ---
+  mobile:run:
+    desc: Ejecutar la app Flutter
+    dir: '{{.MOBILE_DIR}}'
+    cmds:
+      - flutter run
+
+  mobile:build:apk:
+    desc: Compilar APK de release
+    dir: '{{.MOBILE_DIR}}'
+    cmds:
+      - flutter build apk --release
+
+  mobile:test:
+    desc: Ejecutar tests de Flutter
+    dir: '{{.MOBILE_DIR}}'
+    cmds:
+      - flutter test
+
+  mobile:lint:
+    desc: Analizar código Flutter
+    dir: '{{.MOBILE_DIR}}'
+    cmds:
+      - flutter analyze
+
+  # --- General ---
+  test:
+    desc: Ejecutar todos los tests
+    cmds:
+      - task: backend:test
+      - task: mobile:test
+
+  lint:
+    desc: Lint de todo el proyecto
+    cmds:
+      - task: backend:lint
+      - task: mobile:lint
+
+  build:
+    desc: Compilar todo
+    cmds:
+      - task: backend:build
+      - task: mobile:build:apk
+
+  # --- Docker ---
+  docker:up:
+    desc: Levantar el entorno Docker
+    dir: ./deployments
+    cmds:
+      - docker compose up -d --build
+
+  docker:down:
+    desc: Parar el entorno Docker
+    dir: ./deployments
+    cmds:
+      - docker compose down
+
+  docker:logs:
+    desc: Ver logs del backend
+    dir: ./deployments
+    cmds:
+      - docker compose logs -f backend
+
+  # --- Setup ---
+  setup:
+    desc: Configuración inicial del proyecto
+    cmds:
+      - cd {{.BACKEND_DIR}} && go mod download
+      - cd {{.MOBILE_DIR}} && flutter pub get
+      - cp deployments/.env.example deployments/.env
+      - echo "✅ Proyecto configurado. Edita deployments/.env con tus claves."
