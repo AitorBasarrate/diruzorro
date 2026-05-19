@@ -16,7 +16,7 @@ type Config struct {
 
 func Load() *Config {
 	return &Config{
-		Port:                getEnv("PORT", "8080"),
+		Port:                getEnv("PORT", "8082"),
 		DatabasePath:        getEnv("DATABASE_PATH", "./diruzorro.db"),
 		APIKey:              getEnv("API_KEY", ""),
 		GoCardlessSecretID:  getEnv("GOCARDLESS_SECRET_ID", ""),

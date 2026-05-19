@@ -7,23 +7,23 @@ Lista detallada de tareas para completar el proyecto. Marca cada tarea con ✅ c
 ## Fase 1: Infraestructura (Semana 1-2)
 
 ### 1.1 Entorno de desarrollo
-- [ ] Instalar Go 1.25+ (`go version`)
-- [ ] Instalar Flutter 3.x+ (`flutter doctor`)
-- [ ] Instalar Task (`go install github.com/go-task/task/v3/cmd/task@latest`)
-- [ ] Instalar Docker y Docker Compose
-- [ ] Instalar golangci-lint (`go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest`)
+- [x] Instalar Go 1.25+ (`go version`)
+- [x] Instalar Flutter 3.x+ (`flutter doctor`)
+- [x] Instalar Task (`go install github.com/go-task/task/v3/cmd/task@latest`)
+- [x] Instalar Docker y Docker Compose
+- [x] Instalar golangci-lint (`go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest`)
 
 ### 1.2 Flutter: crear proyecto real
-- [ ] Dentro de `mobile/`, ejecutar: `flutter create --org com.diruzorro --project-name diruzorro .`
-- [ ] Sustituir el `pubspec.yaml` generado con el que ya existe (o hacer merge)
-- [ ] Ejecutar `flutter pub get`
-- [ ] Verificar que compila: `flutter analyze`
-- [ ] Probar en emulador: `flutter run`
+- [x] Dentro de `mobile/`, ejecutar: `flutter create --org com.diruzorro --project-name diruzorro .`
+- [x] Sustituir el `pubspec.yaml` generado con el que ya existe (o hacer merge)
+- [x] Ejecutar `flutter pub get`
+- [x] Verificar que compila: `flutter analyze`
+- [x] Probar en emulador: `flutter run`
 
 ### 1.3 Backend: verificar
-- [ ] Ejecutar `task backend:run` — debe arrancar en puerto 8080
-- [ ] Probar health: `curl http://localhost:8080/health` → `{"status":"ok"}`
-- [ ] Probar auth: `curl -H "X-API-Key: dev-key-change-me" http://localhost:8080/api/v1/accounts` → `[]`
+- [x] Ejecutar `task backend:run` — debe arrancar en puerto 8082
+- [x] Probar health: `curl http://localhost:8080/health` → `{"status":"ok"}`
+- [x] Probar auth: `curl -H "X-API-Key: dev-key-change-me" http://localhost:8080/api/v1/accounts` → `[]`
 
 ### 1.4 Docker
 - [ ] Copiar `deployments/.env.example` a `deployments/.env`
