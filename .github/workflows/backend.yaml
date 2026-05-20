@@ -33,6 +33,9 @@ jobs:
           go-version: '1.25'
           cache-dependency-path: backend/go.sum
 
-      - uses: golangci/golangci-lint-action@v6
-        with:
-          working-directory: backend
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+      - name: Run golangci-lint
+        working-directory: backend
+        run: golangci-lint run ./...
