@@ -53,13 +53,13 @@ Lista detallada de tareas para completar el proyecto. Marca cada tarea con ✅ c
 - [x] Ejecutar `task backend:test` — todo verde
 
 ### 2.2 Flutter: pantalla de Cuentas
-- [ ] Implementar `AccountsView` completa:
+- [x] Implementar `AccountsView` completa:
   - Listar cuentas desde la API (usando Riverpod)
   - Mostrar nombre, tipo, saldo
   - Botón FAB para crear cuenta
   - Diálogo/pantalla de creación (nombre, tipo, moneda, saldo inicial)
   - Deslizar para eliminar
-- [ ] Probar con backend corriendo
+- [x] Probar con backend corriendo
 
 ### 2.3 Flutter: pantalla de Categorías
 - [ ] Crear `views/categories_view.dart`
