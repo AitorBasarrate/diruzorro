@@ -52,7 +52,9 @@ func main() {
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"ok"}`))
+		if _, err := w.Write([]byte(`{"status":"ok"}`)); err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}
 	})
 
 	r.Route("/api/v1", func(r chi.Router) {

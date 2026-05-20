@@ -210,7 +210,7 @@ func (r *Repository) CreateTransactionBatch(ctx context.Context, transactions []
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	stmt, err := tx.PrepareContext(ctx,
 		"INSERT INTO transactions (account_id, category_id, amount, type, description, date, bank_transaction_id) VALUES (?, ?, ?, ?, ?, ?, ?)")

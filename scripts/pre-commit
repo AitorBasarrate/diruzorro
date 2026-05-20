@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Detect which areas have staged changes
+STAGED=$(git diff --cached --name-only)
+
+BACKEND_CHANGED=false
+MOBILE_CHANGED=false
+
+if echo "$STAGED" | grep -q '^backend/'; then
+  BACKEND_CHANGED=true
+fi
+if echo "$STAGED" | grep -q '^mobile/'; then
+  MOBILE_CHANGED=true
+fi
+
+FAILED=false
+
+# ── Backend ──────────────────────────────────────────────────────────────────
+if [ "$BACKEND_CHANGED" = true ]; then
+  echo "▶ backend: running tests..."
+  if ! (cd backend && go test ./... 2>&1); then
+    echo "✖ backend tests failed"
+    FAILED=true
+  else
+    echo "✔ backend tests passed"
+  fi
+
+  echo "▶ backend: running lint..."
+  if ! (cd backend && golangci-lint run ./... 2>&1); then
+    echo "✖ backend lint failed"
+    FAILED=true
+  else
+    echo "✔ backend lint passed"
+  fi
+fi
+
+# ── Mobile ───────────────────────────────────────────────────────────────────
+if [ "$MOBILE_CHANGED" = true ]; then
+  echo "▶ mobile: running analyze..."
+  if ! (cd mobile && flutter analyze 2>&1); then
+    echo "✖ flutter analyze failed"
+    FAILED=true
+  else
+    echo "✔ flutter analyze passed"
+  fi
+
+  echo "▶ mobile: running tests..."
+  if ! (cd mobile && flutter test 2>&1); then
+    echo "✖ flutter tests failed"
+    FAILED=true
+  else
+    echo "✔ flutter tests passed"
+  fi
+fi
+
+if [ "$FAILED" = true ]; then
+  echo ""
+  echo "Pre-commit checks failed. Fix the errors above and try again."
+  echo "To skip (not recommended): git commit --no-verify"
+  exit 1
+fi

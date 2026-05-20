@@ -104,4 +104,12 @@ tasks:
       - cd {{.BACKEND_DIR}} && go mod download
       - cd {{.MOBILE_DIR}} && flutter pub get
       - cp deployments/.env.example deployments/.env
+      - task: setup:hooks
       - echo "✅ Proyecto configurado. Edita deployments/.env con tus claves."
+
+  setup:hooks:
+    desc: Instalar git hooks desde scripts/
+    cmds:
+      - cp scripts/pre-commit .git/hooks/pre-commit
+      - chmod +x .git/hooks/pre-commit
+      - echo "✅ Git hooks instalados."

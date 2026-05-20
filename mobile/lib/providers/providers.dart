@@ -3,11 +3,13 @@ import 'package:diruzorro/services/api_client.dart';
 import 'package:diruzorro/models/models.dart';
 
 // API Client provider
+// NOTE: For Android emulator use 10.0.2.2 instead of localhost.
+// For a physical device, use the LAN IP of the host machine.
 final apiClientProvider = Provider<ApiClient>((ref) {
   // TODO: Load from secure storage / config
   return ApiClient(
-    baseUrl: 'http://localhost:8080/api/v1',
-    apiKey: '',
+    baseUrl: 'http://192.168.68.107:8080/api/v1',
+    apiKey: 'dev-key-change-me',
   );
 });
 
