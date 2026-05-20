@@ -27,13 +27,13 @@ Lista detallada de tareas para completar el proyecto. Marca cada tarea con ✅ c
 
 ### 1.4 Docker
 - [x] Copiar `deployments/.env.example` a `deployments/.env`
-- [ ] Rellenar `API_KEY` con un valor aleatorio
-- [ ] Ejecutar `task docker:up`
-- [ ] Verificar: `curl http://localhost:8080/health`
-- [ ] Parar: `task docker:down`
+- [x] Rellenar `API_KEY` con un valor aleatorio
+- [x] Ejecutar `task docker:up`
+- [x] Verificar: `curl http://localhost:8080/health`
+- [x] Parar: `task docker:down`
 
 ### 1.5 CI (opcional)
-- [ ] Crear `.github/workflows/ci.yaml` con jobs para:
+- [x] Crear `.github/workflows/ci.yaml` con jobs para:
   - `go test ./...`
   - `golangci-lint run`
   - `flutter test`
@@ -44,13 +44,13 @@ Lista detallada de tareas para completar el proyecto. Marca cada tarea con ✅ c
 ## Fase 2: CRUD de Finanzas (Semana 3-4)
 
 ### 2.1 Backend: tests
-- [ ] Crear `backend/internal/repository/repository_test.go`
+- [x] Crear `backend/internal/repository/repository_test.go`
   - Test crear cuenta
   - Test crear categoría
   - Test crear transacción
   - Test filtrar transacciones por fecha
   - Test filtrar por categoría
-- [ ] Ejecutar `task backend:test` — todo verde
+- [x] Ejecutar `task backend:test` — todo verde
 
 ### 2.2 Flutter: pantalla de Cuentas
 - [ ] Implementar `AccountsView` completa:
