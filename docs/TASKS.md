@@ -68,19 +68,19 @@ Lista detallada de tareas para completar el proyecto. Marca cada tarea con ✅ c
 - [x] Añadir acceso desde menú o settings
 
 ### 2.4 Flutter: pantalla de Transacciones
-- [ ] Implementar `TransactionsView` completa:
+- [x] Implementar `TransactionsView` completa:
   - Lista de transacciones ordenadas por fecha
   - Mostrar: importe, categoría (icono+color), descripción, fecha
   - Color verde para ingresos, rojo para gastos
   - FAB para crear transacción
-- [ ] Pantalla de creación de transacción:
+- [x] Pantalla de creación de transacción:
   - Selector de cuenta
   - Selector de categoría
   - Importe (teclado numérico)
   - Tipo (gasto/ingreso/transferencia)
   - Fecha (date picker)
   - Descripción
-- [ ] Filtros: por fecha (rango), por categoría, por cuenta
+- [x] Filtros: por fecha (rango), por categoría, por cuenta
 
 ### 2.5 Flutter: Home (resumen)
 - [ ] Implementar `HomeView`:

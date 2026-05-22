@@ -21,6 +21,10 @@ final _router = GoRouter(
         GoRoute(path: '/categories', builder: (context, state) => const CategoriesView()),
       ],
     ),
+    GoRoute(
+      path: '/transactions/new',
+      builder: (context, state) => const CreateTransactionView(),
+    ),
   ],
 );
 
