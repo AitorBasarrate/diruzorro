@@ -62,10 +62,10 @@ Lista detallada de tareas para completar el proyecto. Marca cada tarea con ✅ c
 - [x] Probar con backend corriendo
 
 ### 2.3 Flutter: pantalla de Categorías
-- [ ] Crear `views/categories_view.dart`
-- [ ] Listar categorías con icono y color
-- [ ] Crear categoría (nombre, tipo, icono emoji, color)
-- [ ] Añadir acceso desde menú o settings
+- [x] Crear `views/categories_view.dart`
+- [x] Listar categorías con icono y color
+- [x] Crear categoría (nombre, tipo, icono emoji, color)
+- [x] Añadir acceso desde menú o settings
 
 ### 2.4 Flutter: pantalla de Transacciones
 - [ ] Implementar `TransactionsView` completa:

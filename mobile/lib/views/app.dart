@@ -4,6 +4,7 @@ import 'package:diruzorro/views/home_view.dart';
 import 'package:diruzorro/views/transactions_view.dart';
 import 'package:diruzorro/views/accounts_view.dart';
 import 'package:diruzorro/views/budgets_view.dart';
+import 'package:diruzorro/views/categories_view.dart';
 import 'package:diruzorro/views/reports_view.dart';
 
 final _router = GoRouter(
@@ -17,6 +18,7 @@ final _router = GoRouter(
         GoRoute(path: '/accounts', builder: (context, state) => const AccountsView()),
         GoRoute(path: '/budgets', builder: (context, state) => const BudgetsView()),
         GoRoute(path: '/reports', builder: (context, state) => const ReportsView()),
+        GoRoute(path: '/categories', builder: (context, state) => const CategoriesView()),
       ],
     ),
   ],

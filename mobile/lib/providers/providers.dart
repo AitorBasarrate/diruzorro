@@ -5,10 +5,13 @@ import 'package:diruzorro/models/models.dart';
 // API Client provider
 // NOTE: For Android emulator use 10.0.2.2 instead of localhost.
 // For a physical device, use the LAN IP of the host machine.
+const networkBaseUrl = 'http://192.168.68.107:8082/api/v1';
+const localBaseUrl = 'http://localhost:8082/api/v1';
+
 final apiClientProvider = Provider<ApiClient>((ref) {
-  // TODO: Load from secure storage / config
+// TODO: Load from secure storage / config
   return ApiClient(
-    baseUrl: 'http://192.168.68.107:8080/api/v1',
+    baseUrl: localBaseUrl,
     apiKey: 'dev-key-change-me',
   );
 });

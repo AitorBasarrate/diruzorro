@@ -40,6 +40,10 @@ class ApiClient {
     return response.data as Map<String, dynamic>;
   }
 
+  Future<void> deleteCategory(int id) async {
+    await _dio.delete('/categories/$id');
+  }
+
   // --- Transactions ---
   Future<List<dynamic>> getTransactions({String? from, String? to, int? categoryId, int? accountId}) async {
     final params = <String, dynamic>{};

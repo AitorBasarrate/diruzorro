@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:diruzorro/models/models.dart';
 import 'package:diruzorro/providers/providers.dart';
@@ -12,7 +13,16 @@ class AccountsView extends ConsumerWidget {
     final accountsAsync = ref.watch(accountsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Cuentas')),
+      appBar: AppBar(
+        title: const Text('Cuentas'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.label_outline),
+            tooltip: 'Categorías',
+            onPressed: () => context.push('/categories'),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateDialog(context, ref),
         tooltip: 'Nueva cuenta',
