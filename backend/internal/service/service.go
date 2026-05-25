@@ -58,7 +58,36 @@ func (s *Service) ListTransactions(ctx context.Context, filter model.Transaction
 }
 
 func (s *Service) CreateTransaction(ctx context.Context, req model.CreateTransactionRequest) (model.Transaction, error) {
-	return s.repo.CreateTransaction(ctx, req)
+	tx, err := s.repo.CreateTransaction(ctx, req)
+	if err != nil {
+		return model.Transaction{}, err
+	}
+
+	var delta float64
+	switch req.Type {
+	case "income":
+		delta = req.Amount
+	case "expense":
+		delta = -req.Amount
+	}
+
+	if delta != 0 {
+		account, err := s.repo.GetAccount(ctx, req.AccountID)
+		if err != nil {
+			return model.Transaction{}, err
+		}
+		updateReq := model.CreateAccountRequest{
+			Name:     account.Name,
+			Type:     account.Type,
+			Currency: account.Currency,
+			Balance:  account.Balance + delta,
+		}
+		if _, err := s.repo.UpdateAccount(ctx, req.AccountID, updateReq); err != nil {
+			return model.Transaction{}, err
+		}
+	}
+
+	return tx, nil
 }
 
 func (s *Service) UpdateTransaction(ctx context.Context, id int64, req model.CreateTransactionRequest) (model.Transaction, error) {
