@@ -36,7 +36,8 @@ class AccountsView extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, size: 48, color: Colors.red),
               const SizedBox(height: 8),
-              Text('Error al cargar cuentas', style: Theme.of(context).textTheme.bodyMedium),
+              Text('Error al cargar cuentas',
+                  style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 16),
               FilledButton.icon(
                 onPressed: () => ref.invalidate(accountsProvider),
@@ -52,11 +53,14 @@ class AccountsView extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.account_balance_wallet_outlined, size: 64, color: Colors.grey),
+                  Icon(Icons.account_balance_wallet_outlined,
+                      size: 64, color: Colors.grey),
                   SizedBox(height: 16),
-                  Text('No hay cuentas todavía', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                  Text('No hay cuentas todavía',
+                      style: TextStyle(fontSize: 16, color: Colors.grey)),
                   SizedBox(height: 4),
-                  Text('Pulsa + para añadir una', style: TextStyle(color: Colors.grey)),
+                  Text('Pulsa + para añadir una',
+                      style: TextStyle(color: Colors.grey)),
                 ],
               ),
             );
@@ -98,8 +102,10 @@ class _AccountTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-    final balanceColor = account.balance < 0 ? Colors.red : Colors.green.shade700;
-    final formatter = NumberFormat.currency(locale: 'es_ES', symbol: account.currency);
+    final balanceColor =
+        account.balance < 0 ? Colors.red : Colors.green.shade700;
+    final formatter =
+        NumberFormat.currency(locale: 'es_ES', symbol: account.currency);
 
     return Dismissible(
       key: ValueKey(account.id),
@@ -115,7 +121,8 @@ class _AccountTile extends ConsumerWidget {
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('Eliminar cuenta'),
-            content: Text('¿Eliminar "${account.name}"? Esta acción no se puede deshacer.'),
+            content: Text(
+                '¿Eliminar "${account.name}"? Esta acción no se puede deshacer.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
@@ -143,7 +150,9 @@ class _AccountTile extends ConsumerWidget {
         } catch (e) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error al eliminar: $e'), backgroundColor: Colors.red),
+              SnackBar(
+                  content: Text('Error al eliminar: $e'),
+                  backgroundColor: Colors.red),
             );
           }
         }
@@ -155,11 +164,13 @@ class _AccountTile extends ConsumerWidget {
             backgroundColor: colorScheme.primaryContainer,
             child: Icon(_accountIcon(account.type), color: colorScheme.primary),
           ),
-          title: Text(account.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+          title: Text(account.name,
+              style: const TextStyle(fontWeight: FontWeight.w600)),
           subtitle: Text(_accountTypeLabel(account.type)),
           trailing: Text(
             formatter.format(account.balance),
-            style: TextStyle(fontWeight: FontWeight.bold, color: balanceColor, fontSize: 16),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: balanceColor, fontSize: 16),
           ),
         ),
       ),
@@ -188,7 +199,8 @@ class _CreateAccountDialog extends ConsumerStatefulWidget {
   final VoidCallback onCreated;
 
   @override
-  ConsumerState<_CreateAccountDialog> createState() => _CreateAccountDialogState();
+  ConsumerState<_CreateAccountDialog> createState() =>
+      _CreateAccountDialogState();
 }
 
 class _CreateAccountDialogState extends ConsumerState<_CreateAccountDialog> {
@@ -226,23 +238,28 @@ class _CreateAccountDialogState extends ConsumerState<_CreateAccountDialog> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nombre', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: 'Nombre', border: OutlineInputBorder()),
                 textCapitalization: TextCapitalization.sentences,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Campo requerido' : null,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Campo requerido' : null,
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _type,
-                decoration: const InputDecoration(labelText: 'Tipo', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: 'Tipo', border: OutlineInputBorder()),
                 items: _accountTypes
-                    .map((t) => DropdownMenuItem(value: t.$1, child: Text(t.$2)))
+                    .map(
+                        (t) => DropdownMenuItem(value: t.$1, child: Text(t.$2)))
                     .toList(),
                 onChanged: (v) => setState(() => _type = v!),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _currency,
-                decoration: const InputDecoration(labelText: 'Moneda', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: 'Moneda', border: OutlineInputBorder()),
                 items: _currencies
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                     .toList(),
@@ -251,11 +268,15 @@ class _CreateAccountDialogState extends ConsumerState<_CreateAccountDialog> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _balanceController,
-                decoration: const InputDecoration(labelText: 'Saldo inicial', border: OutlineInputBorder()),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                decoration: const InputDecoration(
+                    labelText: 'Saldo inicial', border: OutlineInputBorder()),
+                keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true, signed: true),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Campo requerido';
-                  if (double.tryParse(v.replaceAll(',', '.')) == null) return 'Número inválido';
+                  if (double.tryParse(v.replaceAll(',', '.')) == null) {
+                    return 'Número inválido';
+                  }
                   return null;
                 },
               ),
@@ -271,7 +292,10 @@ class _CreateAccountDialogState extends ConsumerState<_CreateAccountDialog> {
         FilledButton(
           onPressed: _loading ? null : _submit,
           child: _loading
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2))
               : const Text('Crear'),
         ),
       ],
@@ -296,7 +320,9 @@ class _CreateAccountDialogState extends ConsumerState<_CreateAccountDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al crear la cuenta: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Error al crear la cuenta: $e'),
+              backgroundColor: Colors.red),
         );
       }
     } finally {
