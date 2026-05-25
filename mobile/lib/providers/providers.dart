@@ -34,11 +34,15 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) async {
 final transactionsProvider = FutureProvider<List<Transaction>>((ref) async {
   final api = ref.watch(apiClientProvider);
   final data = await api.getTransactions();
-  return data.map((e) => Transaction.fromJson(e as Map<String, dynamic>)).toList();
+  return data
+      .map((e) => Transaction.fromJson(e as Map<String, dynamic>))
+      .toList();
 });
 
 // --- Budgets ---
-final budgetsProvider = FutureProvider.family<List<Budget>, ({int month, int year})>((ref, params) async {
+final budgetsProvider =
+    FutureProvider.family<List<Budget>, ({int month, int year})>(
+        (ref, params) async {
   final api = ref.watch(apiClientProvider);
   final data = await api.getBudgets(month: params.month, year: params.year);
   return data.map((e) => Budget.fromJson(e as Map<String, dynamic>)).toList();
@@ -48,5 +52,7 @@ final budgetsProvider = FutureProvider.family<List<Budget>, ({int month, int yea
 final savingsGoalsProvider = FutureProvider<List<SavingsGoal>>((ref) async {
   final api = ref.watch(apiClientProvider);
   final data = await api.getSavingsGoals();
-  return data.map((e) => SavingsGoal.fromJson(e as Map<String, dynamic>)).toList();
+  return data
+      .map((e) => SavingsGoal.fromJson(e as Map<String, dynamic>))
+      .toList();
 });
