@@ -11,7 +11,7 @@ const localBaseUrl = 'http://localhost:8082/api/v1';
 final apiClientProvider = Provider<ApiClient>((ref) {
 // TODO: Load from secure storage / config
   return ApiClient(
-    baseUrl: localBaseUrl,
+    baseUrl: networkBaseUrl,
     apiKey: 'dev-key-change-me',
   );
 });

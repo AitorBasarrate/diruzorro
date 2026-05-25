@@ -83,12 +83,11 @@ Lista detallada de tareas para completar el proyecto. Marca cada tarea con ✅ c
 - [x] Filtros: por fecha (rango), por categoría, por cuenta
 
 ### 2.5 Flutter: Home (resumen)
-- [ ] Implementar `HomeView`:
-  - Saldo total (suma de todas las cuentas)
-  - Gastos del mes actual
-  - Ingresos del mes actual
-  - Últimas 5 transacciones
-  - Tarjetas resumen de cada cuenta
+- [-] Implementar `HomeView`:
+  - [x] Saldo total (suma de todas las cuentas)
+  - [x] Grafico con el balance del mes actual
+  - [ ] Últimas 5 transacciones
+  - [ ] Tarjetas resumen de cada cuenta
 
 ---
 
