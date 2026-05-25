@@ -157,9 +157,10 @@ class _MonthlyExpenseSection extends ConsumerWidget {
           final day = DateTime.parse(t.date).day;
           if (t.type == 'income') {
             incomeByDay[day] = (incomeByDay[day] ?? 0) + t.amount;
-          } else {
+          } else if (t.type == 'expense') {
             expenseByDay[day] = (expenseByDay[day] ?? 0) + t.amount;
           }
+          // other types (e.g. transfer) are intentionally ignored
         }
 
         final days = {...incomeByDay.keys, ...expenseByDay.keys}.toList()
