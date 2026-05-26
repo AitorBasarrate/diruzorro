@@ -22,6 +22,100 @@ func setupTestService(t *testing.T) (*Service, func()) {
 	return svc, func() { _ = db.Close() }
 }
 
+func TestCreateExpenseDecreasesAccountBalance(t *testing.T) {
+	svc, cleanup := setupTestService(t)
+	defer cleanup()
+
+	ctx := context.Background()
+
+	acc, err := svc.repo.CreateAccount(ctx, model.CreateAccountRequest{
+		Name:     "Test",
+		Type:     "checking",
+		Currency: "EUR",
+		Balance:  1000,
+	})
+	if err != nil {
+		t.Fatalf("CreateAccount: %v", err)
+	}
+
+	cat, err := svc.repo.CreateCategory(ctx, model.CreateCategoryRequest{
+		Name:  "Comida",
+		Type:  "expense",
+		Icon:  "🍕",
+		Color: "#FF0000",
+	})
+	if err != nil {
+		t.Fatalf("CreateCategory: %v", err)
+	}
+
+	_, err = svc.CreateTransaction(ctx, model.CreateTransactionRequest{
+		AccountID:   acc.ID,
+		CategoryID:  &cat.ID,
+		Amount:      50,
+		Type:        "expense",
+		Description: "Supermercado",
+		Date:        "2026-05-10",
+	})
+	if err != nil {
+		t.Fatalf("CreateTransaction: %v", err)
+	}
+
+	updated, err := svc.repo.GetAccount(ctx, acc.ID)
+	if err != nil {
+		t.Fatalf("GetBudgetByCategoryMonthYear: %v", err)
+	}
+	if updated.Balance != 950 {
+		t.Errorf("expected spent_amount: %v, got: %f", 950, updated.Balance)
+	}
+}
+
+func TestCreateIncomeIncreasesAccountBalance(t *testing.T) {
+	svc, cleanup := setupTestService(t)
+	defer cleanup()
+
+	ctx := context.Background()
+
+	acc, err := svc.repo.CreateAccount(ctx, model.CreateAccountRequest{
+		Name:     "Test",
+		Type:     "checking",
+		Currency: "EUR",
+		Balance:  1000,
+	})
+	if err != nil {
+		t.Fatalf("CreateAccount: %v", err)
+	}
+
+	cat, err := svc.repo.CreateCategory(ctx, model.CreateCategoryRequest{
+		Name:  "Comida",
+		Type:  "income",
+		Icon:  "🍕",
+		Color: "#FF0000",
+	})
+	if err != nil {
+		t.Fatalf("CreateCategory: %v", err)
+	}
+
+	_, err = svc.CreateTransaction(ctx, model.CreateTransactionRequest{
+		AccountID:   acc.ID,
+		CategoryID:  &cat.ID,
+		Amount:      50,
+		Type:        "income",
+		Description: "Supermercado",
+		Date:        "2026-05-10",
+	})
+	if err != nil {
+		t.Fatalf("CreateTransaction: %v", err)
+	}
+
+	updated, err := svc.repo.GetAccount(ctx, acc.ID)
+	if err != nil {
+		t.Fatalf("GetBudgetByCategoryMonthYear: %v", err)
+	}
+	if updated.Balance != 1050 {
+		t.Errorf("expected spent_amount: %v, got: %f", 1050, updated.Balance)
+	}
+}
+
 func TestCreateExpenseIncrementsBudgetSpentAmount(t *testing.T) {
 	svc, cleanup := setupTestService(t)
 	defer cleanup()
@@ -88,15 +182,24 @@ func TestCreateExpenseAccumulatesBudgetSpentAmount(t *testing.T) {
 
 	ctx := context.Background()
 
-	acc, _ := svc.repo.CreateAccount(ctx, model.CreateAccountRequest{
+	acc, err := svc.repo.CreateAccount(ctx, model.CreateAccountRequest{
 		Name: "Test", Type: "checking", Currency: "EUR", Balance: 1000,
 	})
-	cat, _ := svc.repo.CreateCategory(ctx, model.CreateCategoryRequest{
+	if err != nil {
+		t.Fatalf("CreateAccount: %v", err)
+	}
+	cat, err := svc.repo.CreateCategory(ctx, model.CreateCategoryRequest{
 		Name: "Transporte", Type: "expense", Icon: "🚗", Color: "#0000FF",
 	})
-	_, _ = svc.repo.CreateBudget(ctx, model.CreateBudgetRequest{
+	if err != nil {
+		t.Fatalf("CreateCategory: %v", err)
+	}
+	_, err = svc.repo.CreateBudget(ctx, model.CreateBudgetRequest{
 		CategoryID: cat.ID, Month: 5, Year: 2026, LimitAmount: 100,
 	})
+	if err != nil {
+		t.Fatalf("CreateBudget: %v", err)
+	}
 
 	for _, amount := range []float64{20, 30, 15} {
 		_, err := svc.CreateTransaction(ctx, model.CreateTransactionRequest{
@@ -112,7 +215,10 @@ func TestCreateExpenseAccumulatesBudgetSpentAmount(t *testing.T) {
 		}
 	}
 
-	b, _ := svc.repo.GetBudgetByCategoryMonthYear(ctx, cat.ID, 5, 2026)
+	b, err := svc.repo.GetBudgetByCategoryMonthYear(ctx, cat.ID, 5, 2026)
+	if err != nil {
+		t.Fatalf("GetBudgetByCategoryMonthYear: %v", err)
+	}
 	if b.SpentAmount != 65 {
 		t.Errorf("expected spent_amount 65, got %v", b.SpentAmount)
 	}
@@ -124,18 +230,27 @@ func TestCreateExpenseDoesNotAffectOtherMonthBudget(t *testing.T) {
 
 	ctx := context.Background()
 
-	acc, _ := svc.repo.CreateAccount(ctx, model.CreateAccountRequest{
+	acc, err := svc.repo.CreateAccount(ctx, model.CreateAccountRequest{
 		Name: "Test", Type: "checking", Currency: "EUR", Balance: 1000,
 	})
-	cat, _ := svc.repo.CreateCategory(ctx, model.CreateCategoryRequest{
+	if err != nil {
+		t.Fatalf("CreateAccount: %v", err)
+	}
+	cat, err := svc.repo.CreateCategory(ctx, model.CreateCategoryRequest{
 		Name: "Comida", Type: "expense", Icon: "🛒", Color: "#00AA00",
 	})
+	if err != nil {
+		t.Fatalf("CreateCategory: %v", err)
+	}
 	// budget for April, but the transaction is in May
-	_, _ = svc.repo.CreateBudget(ctx, model.CreateBudgetRequest{
+	_, err = svc.repo.CreateBudget(ctx, model.CreateBudgetRequest{
 		CategoryID: cat.ID, Month: 4, Year: 2026, LimitAmount: 200,
 	})
+	if err != nil {
+		t.Fatalf("CreateBudget: %v", err)
+	}
 
-	_, err := svc.CreateTransaction(ctx, model.CreateTransactionRequest{
+	_, err = svc.CreateTransaction(ctx, model.CreateTransactionRequest{
 		AccountID:   acc.ID,
 		CategoryID:  &cat.ID,
 		Amount:      40,
@@ -148,7 +263,10 @@ func TestCreateExpenseDoesNotAffectOtherMonthBudget(t *testing.T) {
 	}
 
 	// April budget must remain untouched
-	b, _ := svc.repo.GetBudgetByCategoryMonthYear(ctx, cat.ID, 4, 2026)
+	b, err := svc.repo.GetBudgetByCategoryMonthYear(ctx, cat.ID, 4, 2026)
+	if err != nil {
+		t.Fatalf("GetBudgetByCategoryMonthYear: %v", err)
+	}
 	if b.SpentAmount != 0 {
 		t.Errorf("expected April spent_amount 0, got %v", b.SpentAmount)
 	}
@@ -160,17 +278,26 @@ func TestCreateIncomeDoesNotAffectBudget(t *testing.T) {
 
 	ctx := context.Background()
 
-	acc, _ := svc.repo.CreateAccount(ctx, model.CreateAccountRequest{
+	acc, err := svc.repo.CreateAccount(ctx, model.CreateAccountRequest{
 		Name: "Test", Type: "checking", Currency: "EUR", Balance: 0,
 	})
-	cat, _ := svc.repo.CreateCategory(ctx, model.CreateCategoryRequest{
+	if err != nil {
+		t.Fatalf("CreateAccount: %v", err)
+	}
+	cat, err := svc.repo.CreateCategory(ctx, model.CreateCategoryRequest{
 		Name: "Salario", Type: "income", Icon: "💰", Color: "#00FF00",
 	})
-	_, _ = svc.repo.CreateBudget(ctx, model.CreateBudgetRequest{
+	if err != nil {
+		t.Fatalf("CreateCategory: %v", err)
+	}
+	_, err = svc.repo.CreateBudget(ctx, model.CreateBudgetRequest{
 		CategoryID: cat.ID, Month: 5, Year: 2026, LimitAmount: 999,
 	})
+	if err != nil {
+		t.Fatalf("CreateBudget: %v", err)
+	}
 
-	_, err := svc.CreateTransaction(ctx, model.CreateTransactionRequest{
+	_, err = svc.CreateTransaction(ctx, model.CreateTransactionRequest{
 		AccountID:   acc.ID,
 		CategoryID:  &cat.ID,
 		Amount:      2000,
@@ -182,7 +309,10 @@ func TestCreateIncomeDoesNotAffectBudget(t *testing.T) {
 		t.Fatalf("CreateTransaction: %v", err)
 	}
 
-	b, _ := svc.repo.GetBudgetByCategoryMonthYear(ctx, cat.ID, 5, 2026)
+	b, err := svc.repo.GetBudgetByCategoryMonthYear(ctx, cat.ID, 5, 2026)
+	if err != nil {
+		t.Fatalf("GetBudgetByCategoryMonthYear: %v", err)
+	}
 	if b.SpentAmount != 0 {
 		t.Errorf("expected spent_amount 0 for income, got %v", b.SpentAmount)
 	}
@@ -194,15 +324,24 @@ func TestDeleteExpenseDecrementsBudgetSpentAmount(t *testing.T) {
 
 	ctx := context.Background()
 
-	acc, _ := svc.repo.CreateAccount(ctx, model.CreateAccountRequest{
+	acc, err := svc.repo.CreateAccount(ctx, model.CreateAccountRequest{
 		Name: "Test", Type: "checking", Currency: "EUR", Balance: 1000,
 	})
-	cat, _ := svc.repo.CreateCategory(ctx, model.CreateCategoryRequest{
+	if err != nil {
+		t.Fatalf("CreateAccount: %v", err)
+	}
+	cat, err := svc.repo.CreateCategory(ctx, model.CreateCategoryRequest{
 		Name: "Ocio", Type: "expense", Icon: "🎮", Color: "#AA00AA",
 	})
-	_, _ = svc.repo.CreateBudget(ctx, model.CreateBudgetRequest{
+	if err != nil {
+		t.Fatalf("CreateCategory: %v", err)
+	}
+	_, err = svc.repo.CreateBudget(ctx, model.CreateBudgetRequest{
 		CategoryID: cat.ID, Month: 5, Year: 2026, LimitAmount: 150,
 	})
+	if err != nil {
+		t.Fatalf("CreateBudget: %v", err)
+	}
 
 	tx, err := svc.CreateTransaction(ctx, model.CreateTransactionRequest{
 		AccountID:   acc.ID,
@@ -216,7 +355,10 @@ func TestDeleteExpenseDecrementsBudgetSpentAmount(t *testing.T) {
 		t.Fatalf("CreateTransaction: %v", err)
 	}
 
-	b, _ := svc.repo.GetBudgetByCategoryMonthYear(ctx, cat.ID, 5, 2026)
+	b, err := svc.repo.GetBudgetByCategoryMonthYear(ctx, cat.ID, 5, 2026)
+	if err != nil {
+		t.Fatalf("GetBudgetByCategoryMonthYear: %v", err)
+	}
 	if b.SpentAmount != 60 {
 		t.Errorf("expected spent_amount 60 before delete, got %v", b.SpentAmount)
 	}
@@ -225,7 +367,10 @@ func TestDeleteExpenseDecrementsBudgetSpentAmount(t *testing.T) {
 		t.Fatalf("DeleteTransaction: %v", err)
 	}
 
-	b, _ = svc.repo.GetBudgetByCategoryMonthYear(ctx, cat.ID, 5, 2026)
+	b, err = svc.repo.GetBudgetByCategoryMonthYear(ctx, cat.ID, 5, 2026)
+	if err != nil {
+		t.Fatalf("GetBudgetByCategoryMonthYear: %v", err)
+	}
 	if b.SpentAmount != 0 {
 		t.Errorf("expected spent_amount 0 after delete, got %v", b.SpentAmount)
 	}
@@ -237,17 +382,26 @@ func TestDeleteExpenseDoesNotGoBelowZero(t *testing.T) {
 
 	ctx := context.Background()
 
-	acc, _ := svc.repo.CreateAccount(ctx, model.CreateAccountRequest{
+	acc, err := svc.repo.CreateAccount(ctx, model.CreateAccountRequest{
 		Name: "Test", Type: "checking", Currency: "EUR", Balance: 1000,
 	})
-	cat, _ := svc.repo.CreateCategory(ctx, model.CreateCategoryRequest{
+	if err != nil {
+		t.Fatalf("CreateAccount: %v", err)
+	}
+	cat, err := svc.repo.CreateCategory(ctx, model.CreateCategoryRequest{
 		Name: "Varios", Type: "expense", Icon: "📦", Color: "#888888",
 	})
-	budget, _ := svc.repo.CreateBudget(ctx, model.CreateBudgetRequest{
+	if err != nil {
+		t.Fatalf("CreateCategory: %v", err)
+	}
+	budget, err := svc.repo.CreateBudget(ctx, model.CreateBudgetRequest{
 		CategoryID: cat.ID, Month: 5, Year: 2026, LimitAmount: 200,
 	})
+	if err != nil {
+		t.Fatalf("CreateBudget: %v", err)
+	}
 	// spent_amount is 0; deleting should clamp at 0
-	tx, _ := svc.repo.CreateTransaction(ctx, model.CreateTransactionRequest{
+	tx, err := svc.repo.CreateTransaction(ctx, model.CreateTransactionRequest{
 		AccountID:   acc.ID,
 		CategoryID:  &cat.ID,
 		Amount:      25,
@@ -255,14 +409,22 @@ func TestDeleteExpenseDoesNotGoBelowZero(t *testing.T) {
 		Description: "Test",
 		Date:        "2026-05-01",
 	})
+	if err != nil {
+		t.Fatalf("CreateTransaction: %v", err)
+	}
 	// manually set spent_amount to 0 to simulate edge case
-	_ = svc.repo.AdjustBudgetSpentAmount(ctx, budget.ID, 0)
+	if err := svc.repo.AdjustBudgetSpentAmount(ctx, budget.ID, 0); err != nil {
+		t.Fatalf("AdjustBudgetSpentAmount: %v", err)
+	}
 
 	if err := svc.DeleteTransaction(ctx, tx.ID); err != nil {
 		t.Fatalf("DeleteTransaction: %v", err)
 	}
 
-	b, _ := svc.repo.GetBudgetByCategoryMonthYear(ctx, cat.ID, 5, 2026)
+	b, err := svc.repo.GetBudgetByCategoryMonthYear(ctx, cat.ID, 5, 2026)
+	if err != nil {
+		t.Fatalf("GetBudgetByCategoryMonthYear: %v", err)
+	}
 	if b.SpentAmount < 0 {
 		t.Errorf("spent_amount must not be negative, got %v", b.SpentAmount)
 	}
