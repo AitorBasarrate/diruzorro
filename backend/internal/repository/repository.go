@@ -288,6 +288,22 @@ func (r *Repository) UpdateBudget(ctx context.Context, id int64, req model.Creat
 	return b, err
 }
 
+func (r *Repository) GetBudgetByCategoryMonthYear(ctx context.Context, categoryID int64, month, year int) (model.Budget, error) {
+	var b model.Budget
+	err := r.db.QueryRowContext(ctx,
+		"SELECT id, category_id, month, year, limit_amount, spent_amount FROM budgets WHERE category_id = ? AND month = ? AND year = ?",
+		categoryID, month, year).
+		Scan(&b.ID, &b.CategoryID, &b.Month, &b.Year, &b.LimitAmount, &b.SpentAmount)
+	return b, err
+}
+
+func (r *Repository) AdjustBudgetSpentAmount(ctx context.Context, budgetID int64, delta float64) error {
+	_, err := r.db.ExecContext(ctx,
+		"UPDATE budgets SET spent_amount = MAX(0, spent_amount + ?) WHERE id = ?",
+		delta, budgetID)
+	return err
+}
+
 // --- Savings Goals ---
 
 func (r *Repository) ListSavingsGoals(ctx context.Context) ([]model.SavingsGoal, error) {
