@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/aitorbasarrate/diruzorro/backend/internal/model"
 	"github.com/aitorbasarrate/diruzorro/backend/internal/repository"
@@ -58,7 +59,44 @@ func (s *Service) ListTransactions(ctx context.Context, filter model.Transaction
 }
 
 func (s *Service) CreateTransaction(ctx context.Context, req model.CreateTransactionRequest) (model.Transaction, error) {
-	return s.repo.CreateTransaction(ctx, req)
+	tx, err := s.repo.CreateTransaction(ctx, req)
+	if err != nil {
+		return model.Transaction{}, err
+	}
+
+	var delta float64
+	switch req.Type {
+	case "income":
+		delta = req.Amount
+	case "expense":
+		delta = -req.Amount
+	}
+
+	if delta != 0 {
+		account, err := s.repo.GetAccount(ctx, req.AccountID)
+		if err != nil {
+			return model.Transaction{}, err
+		}
+		updateReq := model.CreateAccountRequest{
+			Name:     account.Name,
+			Type:     account.Type,
+			Currency: account.Currency,
+			Balance:  account.Balance + delta,
+		}
+		if _, err := s.repo.UpdateAccount(ctx, req.AccountID, updateReq); err != nil {
+			return model.Transaction{}, err
+		}
+	}
+
+	if req.Type == "expense" && req.CategoryID != nil {
+		if month, year, ok := parseDateMonthYear(req.Date); ok {
+			if budget, err := s.repo.GetBudgetByCategoryMonthYear(ctx, *req.CategoryID, month, year); err == nil {
+				_ = s.repo.AdjustBudgetSpentAmount(ctx, budget.ID, req.Amount)
+			}
+		}
+	}
+
+	return tx, nil
 }
 
 func (s *Service) UpdateTransaction(ctx context.Context, id int64, req model.CreateTransactionRequest) (model.Transaction, error) {
@@ -66,7 +104,29 @@ func (s *Service) UpdateTransaction(ctx context.Context, id int64, req model.Cre
 }
 
 func (s *Service) DeleteTransaction(ctx context.Context, id int64) error {
-	return s.repo.DeleteTransaction(ctx, id)
+	tx, err := s.repo.GetTransaction(ctx, id)
+	if err != nil {
+		return err
+	}
+	if err := s.repo.DeleteTransaction(ctx, id); err != nil {
+		return err
+	}
+	if tx.Type == "expense" && tx.CategoryID != nil {
+		if month, year, ok := parseDateMonthYear(tx.Date); ok {
+			if budget, err := s.repo.GetBudgetByCategoryMonthYear(ctx, *tx.CategoryID, month, year); err == nil {
+				_ = s.repo.AdjustBudgetSpentAmount(ctx, budget.ID, -tx.Amount)
+			}
+		}
+	}
+	return nil
+}
+
+func parseDateMonthYear(date string) (month, year int, ok bool) {
+	t, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return 0, 0, false
+	}
+	return int(t.Month()), t.Year(), true
 }
 
 // --- Budgets ---

@@ -94,12 +94,12 @@ Lista detallada de tareas para completar el proyecto. Marca cada tarea con ✅ c
 ## Fase 3: Presupuestos y Ahorro (Semana 5)
 
 ### 3.1 Backend: actualizar spent_amount
-- [ ] Cuando se crea una transacción de tipo "expense":
+- [x] Cuando se crea una transacción de tipo "expense":
   - Buscar presupuesto del mes/año para esa categoría
   - Si existe, incrementar `spent_amount`
-- [ ] Cuando se elimina una transacción:
+- [x] Cuando se elimina una transacción:
   - Decrementar `spent_amount` del presupuesto correspondiente
-- [ ] Tests para esta lógica
+- [x] Tests para esta lógica
 
 ### 3.2 Flutter: pantalla de Presupuestos
 - [ ] Implementar `BudgetsView`:
