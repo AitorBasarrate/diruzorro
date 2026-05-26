@@ -39,6 +39,11 @@ task backend:run
 task mobile:run
 ```
 
+## Pre commit
+```bash
+# Create a seamlink for the pre-commit run on each commit.
+ln -sf ../../scripts/pre-commit .git/hooks/pre-commit
+
 ## Comandos disponibles
 
 | Comando | Descripción |
