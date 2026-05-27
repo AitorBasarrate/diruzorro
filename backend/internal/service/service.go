@@ -118,6 +118,30 @@ func (s *Service) DeleteTransaction(ctx context.Context, id int64) error {
 			}
 		}
 	}
+
+	if tx.Amount != 0 {
+		account, err := s.repo.GetAccount(ctx, tx.AccountID)
+		if err != nil {
+			return err
+		}
+
+		var updatedBalance float64
+		if tx.Type == "expense" {
+			updatedBalance = account.Balance + tx.Amount
+		} else {
+			updatedBalance = account.Balance - tx.Amount
+		}
+
+		updateReq := model.CreateAccountRequest{
+			Name:     account.Name,
+			Type:     account.Type,
+			Currency: account.Currency,
+			Balance:  updatedBalance,
+		}
+		if _, err := s.repo.UpdateAccount(ctx, tx.AccountID, updateReq); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

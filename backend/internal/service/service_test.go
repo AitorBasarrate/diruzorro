@@ -116,6 +116,66 @@ func TestCreateIncomeIncreasesAccountBalance(t *testing.T) {
 	}
 }
 
+func TestDeleteTransactionUpdatesAccountBalance(t *testing.T) {
+	svc, cleanup := setupTestService(t)
+	defer cleanup()
+
+	ctx := context.Background()
+
+	acc, err := svc.repo.CreateAccount(ctx, model.CreateAccountRequest{
+		Name:     "Test",
+		Type:     "checking",
+		Currency: "EUR",
+		Balance:  1000,
+	})
+	if err != nil {
+		t.Fatalf("CreateAccount: %v", err)
+	}
+
+	cat, err := svc.repo.CreateCategory(ctx, model.CreateCategoryRequest{
+		Name:  "Comida",
+		Type:  "income",
+		Icon:  "🍕",
+		Color: "#FF0000",
+	})
+	if err != nil {
+		t.Fatalf("CreateCategory: %v", err)
+	}
+
+	tx, err := svc.CreateTransaction(ctx, model.CreateTransactionRequest{
+		AccountID:   acc.ID,
+		CategoryID:  &cat.ID,
+		Amount:      50,
+		Type:        "income",
+		Description: "Supermercado",
+		Date:        "2026-05-10",
+	})
+	if err != nil {
+		t.Fatalf("CreateTransaction: %v", err)
+	}
+
+	updated, err := svc.repo.GetAccount(ctx, acc.ID)
+	if err != nil {
+		t.Fatalf("GetAccount: %v", err)
+	}
+	if updated.Balance != 1050 {
+		t.Errorf("expected spent_amount: %v, got: %f", 1050, updated.Balance)
+	}
+
+	err = svc.DeleteTransaction(ctx, tx.ID)
+	if err != nil {
+		t.Errorf("DeleteTransaction: %v", err)
+	}
+
+	updated, err = svc.repo.GetAccount(ctx, tx.AccountID)
+	if err != nil {
+		t.Fatalf("GetAccount: %v", err)
+	}
+	if updated.Balance != 1000 {
+		t.Errorf("expected spent_amount: %v, got: %f", 1000, updated.Balance)
+	}
+}
+
 func TestCreateExpenseIncrementsBudgetSpentAmount(t *testing.T) {
 	svc, cleanup := setupTestService(t)
 	defer cleanup()
