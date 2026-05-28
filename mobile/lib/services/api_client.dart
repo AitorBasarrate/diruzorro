@@ -91,6 +91,12 @@ class ApiClient {
     return response.data as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> updateSavingsGoal(
+      int id, Map<String, dynamic> data) async {
+    final response = await _dio.put('/savings-goals/$id', data: data);
+    return response.data as Map<String, dynamic>;
+  }
+
   Future<void> deleteSavingsGoal(int id) async {
     await _dio.delete('/savings-goals/$id');
   }
