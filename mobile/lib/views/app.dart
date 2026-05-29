@@ -68,6 +68,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
           NavigationDestination(icon: Icon(Icons.account_balance), label: 'Cuentas'),
           NavigationDestination(icon: Icon(Icons.pie_chart), label: 'Presupuesto'),
           NavigationDestination(icon: Icon(Icons.bar_chart), label: 'Informes'),
+          NavigationDestination(icon: Icon(Icons.savings_outlined), label: 'Ahorro'),
         ],
       ),
     );
@@ -80,6 +81,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
     if (location.startsWith('/accounts')) return 2;
     if (location.startsWith('/budgets')) return 3;
     if (location.startsWith('/reports')) return 4;
+    if (location.startsWith('/savings')) return 5;
     return 0;
   }
 
@@ -90,6 +92,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
       case 2: context.go('/accounts');
       case 3: context.go('/budgets');
       case 4: context.go('/reports');
+      case 5: context.go('/savings');
     }
   }
 }

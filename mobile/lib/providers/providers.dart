@@ -48,6 +48,16 @@ final budgetsProvider =
   return data.map((e) => Budget.fromJson(e as Map<String, dynamic>)).toList();
 });
 
+// --- Reports: Monthly Balance ---
+final monthlyBalanceProvider =
+    FutureProvider.family<List<MonthlyBalanceReport>, int>((ref, year) async {
+  final api = ref.watch(apiClientProvider);
+  final data = await api.getMonthlyBalance(year);
+  return data
+      .map((e) => MonthlyBalanceReport.fromJson(e as Map<String, dynamic>))
+      .toList();
+});
+
 // --- Savings Goals ---
 final savingsGoalsProvider = FutureProvider<List<SavingsGoal>>((ref) async {
   final api = ref.watch(apiClientProvider);

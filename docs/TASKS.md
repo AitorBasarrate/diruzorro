@@ -102,36 +102,30 @@ Lista detallada de tareas para completar el proyecto. Marca cada tarea con ✅ c
 - [x] Tests para esta lógica
 
 ### 3.2 Flutter: pantalla de Presupuestos
-- [ ] Implementar `BudgetsView`:
+- [x] Implementar `BudgetsView`:
   - Selector de mes/año
   - Lista de presupuestos con barra de progreso
   - Color verde si <80%, amarillo 80-100%, rojo si >100%
   - Crear nuevo presupuesto (categoría + límite)
-- [ ] Notificación visual cuando un presupuesto supera el 80%
+- [x] Notificación visual cuando un presupuesto supera el 80%
 
 ### 3.3 Flutter: pantalla de Objetivos de Ahorro
-- [ ] Crear `views/savings_view.dart`
-- [ ] Listar objetivos con:
+- [x] Crear `views/savings_view.dart`
+- [x] Listar objetivos con:
   - Nombre, progreso (barra), importe actual / meta
   - Fecha objetivo (si existe)
-- [ ] Crear objetivo: nombre, cantidad meta, fecha (opcional)
-- [ ] Actualizar progreso manualmente (añadir cantidad)
+- [x] Crear objetivo: nombre, cantidad meta, fecha (opcional)
+- [x] Actualizar progreso manualmente (añadir cantidad)
 
 ---
 
 ## Fase 4: Informes y Gráficos (Semana 6)
 
-### 4.1 Flutter: gastos por categoría
-- [ ] En `ReportsView`, añadir pestaña "Por categoría"
-- [ ] Gráfico circular (PieChart de fl_chart)
-- [ ] Selector de rango de fechas
-- [ ] Leyenda con categoría, color y total
-
 ### 4.2 Flutter: balance mensual
-- [ ] Pestaña "Balance mensual"
-- [ ] Gráfico de barras: ingresos (verde) vs gastos (rojo) por mes
-- [ ] Selector de año
-- [ ] Línea de balance (ingresos - gastos)
+- [x] Pestaña "Balance mensual"
+- [x] Gráfico de barras: ingresos (verde) vs gastos (rojo) por mes
+- [x] Selector de año
+- [x] Línea de balance (ingresos - gastos)
 
 ### 4.3 Flutter: tendencias
 - [ ] Pestaña "Tendencias"
@@ -222,6 +216,15 @@ Lista detallada de tareas para completar el proyecto. Marca cada tarea con ✅ c
 
 ## Extras (cuando quieras)
 
+- [ ] Captura automática de pagos con Google Pay (Android `NotificationListenerService`):
+  - Añadir permiso `BIND_NOTIFICATION_LISTENER_SERVICE` en `android/app/src/main/AndroidManifest.xml`
+  - Implementar servicio nativo Android (`NotificationListenerService`) que escuche notificaciones de Google Pay
+  - Crear canal Flutter ↔ Android (`MethodChannel` o `EventChannel`) para recibir los datos en Dart
+  - Parsear el texto de la notificación (importe + comercio) con regex
+  - Mostrar un diálogo de confirmación al usuario antes de crear la transacción
+  - Añadir pantalla de configuración: activar/desactivar, conceder permiso de notificaciones
+  - Paquete sugerido: `notification_listener_service` (pub.dev)
+  - **Nota**: solo funciona en Android; iOS no permite acceso a notificaciones de otras apps
 - [ ] Transacciones recurrentes (suscripciones, nómina, alquiler)
 - [ ] Exportar datos a CSV
 - [ ] Widget de resumen para la pantalla de inicio del móvil

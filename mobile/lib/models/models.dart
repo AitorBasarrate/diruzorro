@@ -129,6 +129,32 @@ class Budget {
   }
 }
 
+class MonthlyBalanceReport {
+  final int month;
+  final int year;
+  final double income;
+  final double expenses;
+  final double balance;
+
+  MonthlyBalanceReport({
+    required this.month,
+    required this.year,
+    required this.income,
+    required this.expenses,
+    required this.balance,
+  });
+
+  factory MonthlyBalanceReport.fromJson(Map<String, dynamic> json) {
+    return MonthlyBalanceReport(
+      month: json['month'] as int,
+      year: json['year'] as int,
+      income: (json['income'] as num).toDouble(),
+      expenses: (json['expenses'] as num).toDouble(),
+      balance: (json['balance'] as num).toDouble(),
+    );
+  }
+}
+
 class SavingsGoal {
   final int id;
   final String name;
