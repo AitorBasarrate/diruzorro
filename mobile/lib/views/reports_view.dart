@@ -25,7 +25,7 @@ class ReportsView extends StatelessWidget {
         body: const TabBarView(
           children: [
             _MonthlyBalanceTab(),
-            _TrendsPlaceholder(),
+            _TrendsTab(),
           ],
         ),
       ),
@@ -586,26 +586,426 @@ class _SummaryCard extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Trends placeholder (task 4.3)
+// Trends Tab
 // ---------------------------------------------------------------------------
 
-class _TrendsPlaceholder extends StatelessWidget {
-  const _TrendsPlaceholder();
+class _TrendsTab extends ConsumerStatefulWidget {
+  const _TrendsTab();
+
+  @override
+  ConsumerState<_TrendsTab> createState() => _TrendsTabState();
+}
+
+class _TrendsTabState extends ConsumerState<_TrendsTab> {
+  int _months = 6;
+
+  static const _periodOptions = [3, 6, 12];
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.show_chart, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text('Próximamente',
-              style: TextStyle(fontSize: 18, color: Colors.grey)),
-          SizedBox(height: 4),
-          Text('Tendencias de gastos',
-              style: TextStyle(color: Colors.grey)),
-        ],
+    final dataAsync = ref.watch(trendsProvider(_months));
+
+    return Column(
+      children: [
+        _PeriodSelector(
+          selected: _months,
+          options: _periodOptions,
+          onChanged: (v) => setState(() => _months = v),
+        ),
+        Expanded(
+          child: dataAsync.when(
+            loading: () =>
+                const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline,
+                      size: 48, color: Colors.red),
+                  const SizedBox(height: 8),
+                  Text('Error al cargar tendencias',
+                      style: Theme.of(context).textTheme.bodyMedium),
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    onPressed: () =>
+                        ref.invalidate(trendsProvider(_months)),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Reintentar'),
+                  ),
+                ],
+              ),
+            ),
+            data: (points) => _TrendsContent(
+              points: points,
+              months: _months,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Period selector
+// ---------------------------------------------------------------------------
+
+class _PeriodSelector extends StatelessWidget {
+  final int selected;
+  final List<int> options;
+  final ValueChanged<int> onChanged;
+
+  const _PeriodSelector({
+    required this.selected,
+    required this.options,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: SegmentedButton<int>(
+        segments: options
+            .map((m) => ButtonSegment<int>(
+                  value: m,
+                  label: Text('$m meses'),
+                ))
+            .toList(),
+        selected: {selected},
+        onSelectionChanged: (s) => onChanged(s.first),
+        showSelectedIcon: false,
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Trends content: line chart + moving average
+// ---------------------------------------------------------------------------
+
+class _TrendsContent extends StatelessWidget {
+  final List<TrendPoint> points;
+  final int months;
+
+  const _TrendsContent({required this.points, required this.months});
+
+  /// Simple moving average over a window of [window] points.
+  static List<double?> _movingAverage(List<double> values, int window) {
+    if (values.length < window) return List.filled(values.length, null);
+    return List.generate(values.length, (i) {
+      if (i < window - 1) return null;
+      final slice = values.sublist(i - window + 1, i + 1);
+      return slice.reduce((a, b) => a + b) / window;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currencyFormat = NumberFormat.currency(
+        locale: 'es_ES', symbol: '€', decimalDigits: 2);
+
+    if (points.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.show_chart, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text('Sin datos para este período',
+                style: TextStyle(fontSize: 16, color: Colors.grey)),
+          ],
+        ),
+      );
+    }
+
+    final totals = points.map((p) => p.total).toList();
+    final maWindow = months >= 12 ? 3 : 2;
+    final maValues = _movingAverage(totals, maWindow);
+
+    final maxY = totals.fold(0.0, (a, b) => a > b ? a : b) * 1.25;
+    const minY = 0.0;
+
+    final expenseSpots = List.generate(
+      points.length,
+      (i) => FlSpot(i.toDouble(), totals[i]),
+    );
+
+    final maSpots = <FlSpot>[];
+    for (var i = 0; i < maValues.length; i++) {
+      if (maValues[i] != null) {
+        maSpots.add(FlSpot(i.toDouble(), maValues[i]!));
+      }
+    }
+
+    final totalExpenses = totals.fold(0.0, (a, b) => a + b);
+    final avgExpenses = totalExpenses / totals.length;
+    final maxMonth = points[totals.indexOf(totals.reduce((a, b) => a > b ? a : b))];
+    final minMonth = points[totals.indexOf(totals.reduce((a, b) => a < b ? a : b))];
+
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 32),
+      children: [
+        // Legend
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _LegendDot(
+                  color: Colors.red.shade400, label: 'Gastos mensuales'),
+              const SizedBox(width: 24),
+              _LegendDot(
+                  color: Colors.orange.shade700,
+                  label: 'Media móvil ($maWindow m)'),
+            ],
+          ),
+        ),
+        // Line chart
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 12, 16, 0),
+          child: SizedBox(
+            height: 240,
+            child: LineChart(
+              LineChartData(
+                minX: 0,
+                maxX: (points.length - 1).toDouble(),
+                minY: minY,
+                maxY: maxY > 0 ? maxY : 100,
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: Colors.grey.withAlpha(51),
+                    strokeWidth: 1,
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                titlesData: FlTitlesData(
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 28,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt();
+                        if (idx < 0 || idx >= points.length) {
+                          return const SizedBox();
+                        }
+                        // API returns e.g. "2026-01"
+                        final raw = points[idx].month;
+                        final parts = raw.split('-');
+                        final label = parts.length == 2
+                            ? _shortMonth(int.tryParse(parts[1]) ?? 0)
+                            : raw;
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(label,
+                              style: const TextStyle(fontSize: 9)),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 52,
+                      getTitlesWidget: (value, meta) {
+                        if (value == meta.max || value == 0) {
+                          return Text(
+                            _formatCompact(value),
+                            style: const TextStyle(fontSize: 9),
+                          );
+                        }
+                        return const SizedBox();
+                      },
+                    ),
+                  ),
+                ),
+                lineBarsData: [
+                  // Expenses line
+                  LineChartBarData(
+                    spots: expenseSpots,
+                    isCurved: true,
+                    curveSmoothness: 0.25,
+                    color: Colors.red.shade400,
+                    barWidth: 2.5,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, _, __, ___) =>
+                          FlDotCirclePainter(
+                        radius: 4,
+                        color: Colors.red.shade400,
+                        strokeWidth: 1.5,
+                        strokeColor: Colors.white,
+                      ),
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: Colors.red.shade400.withAlpha(26),
+                    ),
+                  ),
+                  // Moving average line
+                  if (maSpots.isNotEmpty)
+                    LineChartBarData(
+                      spots: maSpots,
+                      isCurved: true,
+                      curveSmoothness: 0.4,
+                      color: Colors.orange.shade700,
+                      barWidth: 2,
+                      dotData: const FlDotData(show: false),
+                      dashArray: [6, 4],
+                    ),
+                ],
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipItems: (spots) => spots.map((s) {
+                      final idx = s.x.toInt();
+                      final label = idx < points.length
+                          ? points[idx].month
+                          : '';
+                      final isMA = s.barIndex == 1;
+                      return LineTooltipItem(
+                        '${isMA ? 'Media' : label}\n${currencyFormat.format(s.y)}',
+                        TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontStyle:
+                              isMA ? FontStyle.italic : FontStyle.normal,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Summary cards
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _SummaryCard(
+                  label: 'Total período',
+                  amount: totalExpenses,
+                  color: Colors.red.shade400,
+                  format: currencyFormat,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _SummaryCard(
+                  label: 'Media mensual',
+                  amount: avgExpenses,
+                  color: Colors.orange.shade700,
+                  format: currencyFormat,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Min / max callouts
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _MinMaxCard(
+                  label: 'Mes más caro',
+                  month: maxMonth.month,
+                  amount: maxMonth.total,
+                  color: Colors.red.shade700,
+                  format: currencyFormat,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _MinMaxCard(
+                  label: 'Mes más barato',
+                  month: minMonth.month,
+                  amount: minMonth.total,
+                  color: Colors.green.shade600,
+                  format: currencyFormat,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  static const _monthAbbr = [
+    '', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+  ];
+
+  static String _shortMonth(int m) =>
+      (m >= 1 && m <= 12) ? _monthAbbr[m] : '';
+
+  static String _formatCompact(double value) {
+    if (value.abs() >= 1000) {
+      return '${(value / 1000).toStringAsFixed(1)}k';
+    }
+    return value.toStringAsFixed(0);
+  }
+}
+
+class _MinMaxCard extends StatelessWidget {
+  final String label;
+  final String month;
+  final double amount;
+  final Color color;
+  final NumberFormat format;
+
+  const _MinMaxCard({
+    required this.label,
+    required this.month,
+    required this.amount,
+    required this.color,
+    required this.format,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: color.withAlpha(77)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label,
+                style: Theme.of(context)
+                    .textTheme
+                    .labelSmall
+                    ?.copyWith(color: Colors.grey)),
+            const SizedBox(height: 4),
+            Text(month,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(fontWeight: FontWeight.w600)),
+            FittedBox(
+              child: Text(
+                format.format(amount),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: color, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

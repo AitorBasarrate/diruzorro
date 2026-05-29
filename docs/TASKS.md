@@ -128,10 +128,10 @@ Lista detallada de tareas para completar el proyecto. Marca cada tarea con ✅ c
 - [x] Línea de balance (ingresos - gastos)
 
 ### 4.3 Flutter: tendencias
-- [ ] Pestaña "Tendencias"
-- [ ] Gráfico de líneas: evolución del gasto total por mes
-- [ ] Selector de período (3, 6, 12 meses)
-- [ ] Media móvil (opcional)
+- [x] Pestaña "Tendencias"
+- [x] Gráfico de líneas: evolución del gasto total por mes
+- [x] Selector de período (3, 6, 12 meses)
+- [x] Media móvil (opcional)
 
 ---
 

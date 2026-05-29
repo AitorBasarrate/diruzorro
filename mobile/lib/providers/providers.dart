@@ -58,6 +58,16 @@ final monthlyBalanceProvider =
       .toList();
 });
 
+// --- Reports: Trends ---
+final trendsProvider =
+    FutureProvider.family<List<TrendPoint>, int>((ref, months) async {
+  final api = ref.watch(apiClientProvider);
+  final data = await api.getTrends(months: months);
+  return data
+      .map((e) => TrendPoint.fromJson(e as Map<String, dynamic>))
+      .toList();
+});
+
 // --- Savings Goals ---
 final savingsGoalsProvider = FutureProvider<List<SavingsGoal>>((ref) async {
   final api = ref.watch(apiClientProvider);

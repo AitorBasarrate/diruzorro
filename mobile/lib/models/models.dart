@@ -129,6 +129,20 @@ class Budget {
   }
 }
 
+class TrendPoint {
+  final String month;
+  final double total;
+
+  TrendPoint({required this.month, required this.total});
+
+  factory TrendPoint.fromJson(Map<String, dynamic> json) {
+    return TrendPoint(
+      month: json['month'] as String,
+      total: (json['total'] as num).toDouble(),
+    );
+  }
+}
+
 class MonthlyBalanceReport {
   final int month;
   final int year;
