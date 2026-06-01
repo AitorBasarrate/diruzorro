@@ -93,6 +93,14 @@ class _TransactionsViewState extends ConsumerState<TransactionsView> {
         title: const Text('Movimientos'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.upload_file),
+            tooltip: 'Importar CSV',
+            onPressed: () async {
+              await context.push('/transactions/import');
+              ref.invalidate(transactionsProvider);
+            },
+          ),
+          IconButton(
             icon: Icon(
               Icons.filter_list,
               color: _hasFilters ? Theme.of(context).colorScheme.primary : null,
