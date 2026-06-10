@@ -32,10 +32,13 @@ task setup
 
 # 3. Editar deployments/.env con tus claves
 
-# 4. Ejecutar el backend en desarrollo
+# 4. Ejecutar backend + mobile con Docker
+task app:run
+
+# 5. O ejecutar solo backend
 task backend:run
 
-# 5. Ejecutar la app Flutter
+# 6. O ejecutar solo mobile (web)
 task mobile:run
 ```
 
@@ -49,11 +52,12 @@ ln -sf ../../scripts/pre-commit .git/hooks/pre-commit
 
 | Comando | Descripción |
 |---------|-------------|
-| `task backend:run` | Ejecutar backend en dev |
+| `task backend:run` | Ejecutar backend con Docker Compose |
 | `task backend:build` | Compilar backend |
 | `task backend:test` | Tests del backend |
 | `task backend:lint` | Lint del backend |
-| `task mobile:run` | Ejecutar app Flutter |
+| `task mobile:run` | Ejecutar app Flutter web con Docker Compose |
+| `task app:run` | Ejecutar backend + mobile juntos |
 | `task mobile:build:apk` | Compilar APK release |
 | `task mobile:test` | Tests de Flutter |
 | `task mobile:lint` | Análisis de Flutter |

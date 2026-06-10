@@ -7,14 +7,10 @@ vars:
 tasks:
   # --- Backend ---
   backend:run:
-    desc: Ejecutar el backend en modo desarrollo
-    dir: '{{.BACKEND_DIR}}'
+    desc: Ejecutar el backend con Docker Compose
+    dir: ./deployments
     cmds:
-      - go run ./cmd/server
-    env:
-      PORT: 8082
-      DATABASE_PATH: ./diruzorro.db
-      API_KEY: dev-key-change-me
+      - docker compose up --build backend
 
   backend:build:
     desc: Compilar el backend
@@ -36,10 +32,16 @@ tasks:
 
   # --- Mobile ---
   mobile:run:
-    desc: Ejecutar la app Flutter
-    dir: '{{.MOBILE_DIR}}'
+    desc: Ejecutar la app Flutter (web) con Docker Compose
+    dir: ./deployments
     cmds:
-      - flutter run
+      - docker compose up --build mobile
+
+  app:run:
+    desc: Ejecutar backend y mobile juntos con Docker Compose
+    dir: ./deployments
+    cmds:
+      - docker compose up --build backend mobile
 
   mobile:build:apk:
     desc: Compilar APK de release

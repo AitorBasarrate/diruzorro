@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
@@ -24,6 +25,18 @@ class ParsedTransaction {
     required this.type,
     required this.description,
     this.categoryId,
+  });
+}
+
+class _SkippedRow {
+  final int rowNumber; // 1-based CSV row (excluding header)
+  final String rawLine;
+  final String reason;
+
+  _SkippedRow({
+    required this.rowNumber,
+    required this.rawLine,
+    required this.reason,
   });
 }
 
@@ -60,6 +73,7 @@ class _CsvImportViewState extends ConsumerState<CsvImportView> {
   int _importSuccess = 0;
   int _importFailed = 0;
   final List<String> _importErrors = [];
+  List<_SkippedRow> _skippedRows = [];
 
   @override
   void dispose() {
@@ -239,10 +253,28 @@ class _CsvImportViewState extends ConsumerState<CsvImportView> {
     }
 
     final List<ParsedTransaction> parsedList = [];
+    final List<_SkippedRow> skippedList = [];
     for (int i = 1; i < _rawLines.length; i++) {
       final row = _rawLines[i];
+      // Skip fully empty rows
+      if (row.isEmpty || row.every((cell) => cell.toString().trim().isEmpty)) {
+        continue;
+      }
+
+        String rowLabel() => row
+          .take(3)
+          .map((e) => e.toString().trim())
+          .where((s) => s.isNotEmpty)
+          .join(' | ');
+
       if (row.length <= _dateColumnIndex! ||
           row.length <= _amountColumnIndex!) {
+        skippedList.add(_SkippedRow(
+          rowNumber: i,
+          rawLine: rowLabel(),
+          reason:
+              'Fila con columnas insuficientes (${row.length} columnas, se necesitan al menos ${[_dateColumnIndex!, _amountColumnIndex!].reduce((a, b) => a > b ? a : b) + 1})',
+        ));
         continue;
       }
 
@@ -256,7 +288,22 @@ class _CsvImportViewState extends ConsumerState<CsvImportView> {
       final parsedDate = _parseDateString(rawDate, _dateFormat);
       final parsedAmount = _parseAmountString(rawAmount, _decimalSeparator);
 
-      if (parsedDate == null || parsedAmount == null) {
+      if (parsedDate == null) {
+        skippedList.add(_SkippedRow(
+          rowNumber: i,
+          rawLine: rowLabel(),
+          reason:
+              'Fecha no válida: "$rawDate" (formato esperado: $_dateFormat)',
+        ));
+        continue;
+      }
+      if (parsedAmount == null) {
+        skippedList.add(_SkippedRow(
+          rowNumber: i,
+          rawLine: rowLabel(),
+          reason:
+              'Importe no válido: "$rawAmount" (separador decimal: "$_decimalSeparator")',
+        ));
         continue;
       }
 
@@ -285,8 +332,24 @@ class _CsvImportViewState extends ConsumerState<CsvImportView> {
 
     setState(() {
       _preparedTransactions = parsedList;
+      _skippedRows = skippedList;
       _currentStep = 1;
     });
+  }
+
+  String _extractErrorMessage(Object e) {
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map<String, dynamic>) {
+        final msg = data['error'] ?? data['message'];
+        if (msg != null) return msg.toString();
+      }
+      if (data is String && data.trim().isNotEmpty) return data.trim();
+      final code = e.response?.statusCode;
+      if (code != null) return 'Error HTTP $code';
+      return e.message ?? 'Error de red';
+    }
+    return e.toString();
   }
 
   Future<void> _startImport() async {
@@ -330,7 +393,8 @@ class _CsvImportViewState extends ConsumerState<CsvImportView> {
           setState(() {
             _importFailed++;
             _importErrors.add(
-                '${tx.description} (${DateFormat('dd/MM/yyyy').format(tx.date)}): $e');
+                'Fila ${tx.index} — "${tx.description.isEmpty ? 'Sin descripción' : tx.description}" '
+                '(${DateFormat('dd/MM/yyyy').format(tx.date)}): ${_extractErrorMessage(e)}');
           });
         }
       }
@@ -666,6 +730,9 @@ class _CsvImportViewState extends ConsumerState<CsvImportView> {
 
     return Column(
       children: [
+        // Skipped-rows warning banner
+        if (_skippedRows.isNotEmpty) _SkippedRowsBanner(skippedRows: _skippedRows),
+
         // Bulk action & Search Bar Header
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1088,6 +1155,111 @@ class _CsvImportViewState extends ConsumerState<CsvImportView> {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SkippedRowsBanner extends StatefulWidget {
+  final List<_SkippedRow> skippedRows;
+
+  const _SkippedRowsBanner({required this.skippedRows});
+
+  @override
+  State<_SkippedRowsBanner> createState() => _SkippedRowsBannerState();
+}
+
+class _SkippedRowsBannerState extends State<_SkippedRowsBanner> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.orange.shade50,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded,
+                      color: Colors.orange.shade800, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${widget.skippedRows.length} fila${widget.skippedRows.length == 1 ? '' : 's'} omitida${widget.skippedRows.length == 1 ? '' : 's'} por errores de formato',
+                      style: TextStyle(
+                        color: Colors.orange.shade900,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    _expanded ? Icons.expand_less : Icons.expand_more,
+                    color: Colors.orange.shade800,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_expanded) ...[
+            const Divider(height: 1),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: widget.skippedRows.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 6),
+              itemBuilder: (context, i) {
+                final row = widget.skippedRows[i];
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Fila ${row.rowNumber}',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange.shade900),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (row.rawLine.isNotEmpty)
+                            Text(
+                              row.rawLine,
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.orange.shade800,
+                                  fontStyle: FontStyle.italic),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          Text(
+                            row.reason,
+                            style: TextStyle(
+                                fontSize: 11, color: Colors.orange.shade900),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+          Divider(height: 1, color: Colors.orange.shade200),
+        ],
       ),
     );
   }
