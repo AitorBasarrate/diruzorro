@@ -8,6 +8,8 @@ import 'package:diruzorro/views/categories_view.dart';
 import 'package:diruzorro/views/reports_view.dart';
 import 'package:diruzorro/views/savings_view.dart';
 
+import 'package:diruzorro/views/csv_import_view.dart';
+
 final _router = GoRouter(
   initialLocation: '/',
   routes: [
@@ -26,6 +28,10 @@ final _router = GoRouter(
     GoRoute(
       path: '/transactions/new',
       builder: (context, state) => const CreateTransactionView(),
+    ),
+    GoRoute(
+      path: '/transactions/import',
+      builder: (context, state) => const CsvImportView(),
     ),
   ],
 );
