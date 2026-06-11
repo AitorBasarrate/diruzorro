@@ -83,7 +83,7 @@ class _CsvImportViewState extends ConsumerState<CsvImportView> {
 
   Future<void> _pickFile() async {
     try {
-      final result = await FilePicker.pickFiles(
+      final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['csv', 'txt'],
         withData: true,
@@ -725,7 +725,10 @@ class _CsvImportViewState extends ConsumerState<CsvImportView> {
   // --- Step 1: Interactive Preview & Match list ---
   Widget _buildStep1Preview(AsyncValue<List<Category>> categoriesAsync) {
     final filtered = _getFilteredTransactions();
-    final categories = categoriesAsync.valueOrNull ?? [];
+    final categories = switch (categoriesAsync) {
+      AsyncData(:final value) => value,
+      _ => const <Category>[],
+    };
     final currencyFmt = NumberFormat.currency(locale: 'es_ES', symbol: '€');
 
     return Column(

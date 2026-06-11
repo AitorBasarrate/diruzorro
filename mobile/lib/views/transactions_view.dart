@@ -108,8 +108,14 @@ class _TransactionsViewState extends ConsumerState<TransactionsView> {
             tooltip: 'Filtrar',
             onPressed: () => _openFilters(
               context,
-              categoriesAsync.valueOrNull ?? [],
-              accountsAsync.valueOrNull ?? [],
+              switch (categoriesAsync) {
+                AsyncData(:final value) => value,
+                _ => const <Category>[],
+              },
+              switch (accountsAsync) {
+                AsyncData(:final value) => value,
+                _ => const <Account>[],
+              },
             ),
           ),
         ],

@@ -11,21 +11,33 @@ class _Period {
   const _Period(this.month, this.year);
 }
 
-final _selectedPeriodProvider = StateProvider<_Period>((ref) {
-  final now = DateTime.now();
-  return _Period(now.month, now.year);
-});
-
 // ── Screen ───────────────────────────────────────────────────────────────────
 
-class BudgetsView extends ConsumerWidget {
+class BudgetsView extends ConsumerStatefulWidget {
   const BudgetsView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final period = ref.watch(_selectedPeriodProvider);
-    final budgetsAsync =
-        ref.watch(budgetsProvider((month: period.month, year: period.year)));
+  ConsumerState<BudgetsView> createState() => _BudgetsViewState();
+}
+
+class _BudgetsViewState extends ConsumerState<BudgetsView> {
+  late int _selectedMonth;
+  late int _selectedYear;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _selectedMonth = now.month;
+    _selectedYear = now.year;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final period = _Period(_selectedMonth, _selectedYear);
+    final budgetsAsync = ref.watch(
+      budgetsProvider((month: _selectedMonth, year: _selectedYear)),
+    );
     final categoriesAsync = ref.watch(categoriesProvider);
 
     return Scaffold(
@@ -33,14 +45,14 @@ class BudgetsView extends ConsumerWidget {
         title: const Text('Presupuestos'),
         actions: [
           TextButton.icon(
-            onPressed: () => _pickPeriod(context, ref),
+            onPressed: () => _pickPeriod(context),
             icon: const Icon(Icons.calendar_month),
             label: Text(_periodLabel(period)),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateDialog(context, ref),
+        onPressed: () => _showCreateDialog(context),
         tooltip: 'Nuevo presupuesto',
         child: const Icon(Icons.add),
       ),
@@ -56,7 +68,10 @@ class BudgetsView extends ConsumerWidget {
           if (budgets.isEmpty) {
             return const _EmptyState();
           }
-          final categories = categoriesAsync.valueOrNull ?? const <Category>[];
+          final categories = switch (categoriesAsync) {
+            AsyncData(:final value) => value,
+            _ => const <Category>[],
+          };
           final categoriesById = {for (final c in categories) c.id: c};
 
           return RefreshIndicator(
@@ -80,9 +95,8 @@ class BudgetsView extends ConsumerWidget {
     );
   }
 
-  Future<void> _pickPeriod(BuildContext context, WidgetRef ref) async {
-    final current = ref.read(_selectedPeriodProvider);
-    final initial = DateTime(current.year, current.month);
+  Future<void> _pickPeriod(BuildContext context) async {
+    final initial = DateTime(_selectedYear, _selectedMonth);
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -92,13 +106,15 @@ class BudgetsView extends ConsumerWidget {
       helpText: 'Selecciona mes y año',
     );
     if (picked != null) {
-      ref.read(_selectedPeriodProvider.notifier).state =
-          _Period(picked.month, picked.year);
+      setState(() {
+        _selectedMonth = picked.month;
+        _selectedYear = picked.year;
+      });
     }
   }
 
-  void _showCreateDialog(BuildContext context, WidgetRef ref) {
-    final period = ref.read(_selectedPeriodProvider);
+  void _showCreateDialog(BuildContext context) {
+    final period = _Period(_selectedMonth, _selectedYear);
     showDialog<void>(
       context: context,
       builder: (_) => _CreateBudgetDialog(
