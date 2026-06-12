@@ -1,18 +1,26 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:diruzorro/services/api_client.dart';
 import 'package:diruzorro/models/models.dart';
 
 // API Client provider
 // NOTE: For Android emulator use 10.0.2.2 instead of localhost.
 // For a physical device, use the LAN IP of the host machine.
-const networkBaseUrl = 'http://192.168.68.107:8082/api/v1';
-const localBaseUrl = 'http://localhost:8082/api/v1';
+String _envOr(String key, String fallback) {
+  final value = dotenv.env[key];
+  if (value == null || value.trim().isEmpty) {
+    return fallback;
+  }
+  return value.trim();
+}
+
+final apiBaseUrl = _envOr('API_BASE_URL', '');
+final apiKeyValue = _envOr('API_KEY', 'dev-key-change-me');
 
 final apiClientProvider = Provider<ApiClient>((ref) {
-// TODO: Load from secure storage / config
   return ApiClient(
-    baseUrl: localBaseUrl,
-    apiKey: 'dev-key-change-me',
+    baseUrl: apiBaseUrl,
+    apiKey: apiKeyValue,
   );
 });
 
